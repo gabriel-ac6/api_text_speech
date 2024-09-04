@@ -1,14 +1,8 @@
 import express from 'express';
 import gTTS from 'gtts';
 import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-// Configurações para usar __dirname com ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// Configurações do Express
 const app = express();
 const port = 3000;
 
@@ -30,30 +24,19 @@ app.post('/text-to-speech', upload.none(), (req, res) => {
     const language = 'pt';
     const gtts = new gTTS(text, language);
 
-    // Nome do arquivo de saída temporário
-    const outputFile = path.join(__dirname, 'audio.mp3');
+    // Usar um buffer para capturar o áudio sem salvar em arquivo
+    gtts.stream().pipe(res);
 
-    // Salvar o áudio no arquivo temporário
-    gtts.save(outputFile, (err) => {
-        if (err) {
-            console.error('Erro ao salvar o arquivo de áudio:', err);
-            return res.status(500).json({ error: 'Erro ao salvar o arquivo de áudio' });
-        }
+    // Definir o tipo de conteúdo para áudio MP3
+    res.set({
+        'Content-Type': 'audio/mpeg',
+        'Content-Disposition': 'attachment; filename="audio.mp3"'
+    });
 
-        // Enviar o arquivo de áudio como download
-        res.download(outputFile, 'audio.mp3', (err) => {
-            if (err) {
-                console.error('Erro ao enviar o arquivo:', err);
-                res.status(500).json({ error: 'Erro ao enviar o arquivo' });
-            }
-
-            // Remover o arquivo temporário após o envio
-            fs.unlink(outputFile, (unlinkErr) => {
-                if (unlinkErr) {
-                    console.error('Erro ao remover o arquivo temporário:', unlinkErr);
-                }
-            });
-        });
+    // Tratar erros de streaming
+    gtts.stream().on('error', (err) => {
+        console.error('Erro ao gerar o áudio:', err);
+        res.status(500).json({ error: 'Erro ao gerar o áudio' });
     });
 });
 
