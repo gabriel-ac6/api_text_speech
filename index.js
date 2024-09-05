@@ -1,6 +1,8 @@
 import express from 'express';
 import gTTS from 'gtts';
 import multer from 'multer';
+import { PassThrough } from 'stream';
+import ffmpeg from 'fluent-ffmpeg';
 
 // Configurações do Express
 const app = express();
@@ -25,19 +27,22 @@ app.post('/text-to-speech', upload.none(), (req, res) => {
     const gtts = new gTTS(text, language);
 
     // Usar um buffer para capturar o áudio sem salvar em arquivo
-    gtts.stream().pipe(res);
+    const mp3Stream = new PassThrough();
+    gtts.stream().pipe(mp3Stream);
 
-    // Definir o tipo de conteúdo para áudio MP3
+    // Converter o áudio MP3 para WAV usando ffmpeg
     res.set({
-        'Content-Type': 'audio/mpeg',
-        'Content-Disposition': 'attachment; filename="audio.mp3"'
+        'Content-Type': 'audio/wav',
+        'Content-Disposition': 'attachment; filename="audio.wav"'
     });
 
-    // Tratar erros de streaming
-    gtts.stream().on('error', (err) => {
-        console.error('Erro ao gerar o áudio:', err);
-        res.status(500).json({ error: 'Erro ao gerar o áudio' });
-    });
+    ffmpeg(mp3Stream)
+        .toFormat('wav')
+        .on('error', (err) => {
+            console.error('Erro ao converter o áudio:', err);
+            res.status(500).json({ error: 'Erro ao converter o áudio' });
+        })
+        .pipe(res, { end: true });
 });
 
 // Iniciando o servidor
