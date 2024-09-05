@@ -2,6 +2,9 @@ import express from 'express';
 import gTTS from 'gtts';
 import multer from 'multer';
 import { PassThrough } from 'stream';
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
 import ffmpeg from 'fluent-ffmpeg';
 
 // Configurações do Express
