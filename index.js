@@ -11,14 +11,16 @@ const port = 3000;
 
 // Configuração do multer para lidar com form-data
 const upload = multer();
+// Middleware para habilitar CORS
+app.use(cors({
+  origin: '*',  // Permitir qualquer origem
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // Middleware para interpretar o corpo da requisição como JSON
 app.use(express.json());
-
-// Habilitando CORS para todas as rotas
-app.use(cors({
-    origin: '*'
-}));
 
 // Endpoint para converter texto em áudio e retornar como arquivo
 app.post('/text-to-speech', upload.none(), (req, res) => {
