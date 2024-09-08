@@ -16,7 +16,9 @@ const upload = multer();
 app.use(express.json());
 
 // Habilitando CORS para todas as rotas
-app.use(cors());
+app.use(cors({
+    origin: '*'
+}));
 
 // Endpoint para converter texto em áudio e retornar como arquivo
 app.post('/text-to-speech', upload.none(), (req, res) => {
